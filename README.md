@@ -1,4 +1,6 @@
 # Docker introduction
+To follow the tutorial of docker curriculum click [here](https://docker-curriculum.com/).
+
 Docker helps development by providing a tool called a container. A container is a lightweight, isolated environment that shares the host OS kernel but runs independently. Unlike traditional virtual machines, containers don’t require an entire guest OS, making them much more efficient. Instead of consuming large amounts of resources, containers share system resources with the host but use only what they need.
 
 ## Terminology:
