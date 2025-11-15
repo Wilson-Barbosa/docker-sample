@@ -25,7 +25,53 @@ Images are built from a script, the dockerfile. An image is built with <b>layers
 ![content](./diagram.png)
 
 When you write a dockerfile you can run different instructions, and most of them create a new layer. If you use a layer 
-in more than one container docker might cache them locally and just share the binaries with all containers that ask for it. For example, you can write the instruction `FROM ubuntu:22`, this tells docker that a layer containing the ubuntu22 image must be downloaded during build process, but if you have locally this image (and its layers) docker just provides the local one, without downloading anything. If one hundred containers need ubuntu22 you only have to donwload it one time and share it with all these containers. Because images are definied by a unique hash all of them can be cached and share between containers.
+in more than one container docker might cache them and just share the binaries with all containers that ask for it, provided the layer doesn't change its state upon every rebuild process.
+
+To demonstrate how <b>layer caching</b> works consider the following where a dockerfile creates a container for an angular development environment:
+
+```dockerfile
+# Bad layer caching example
+
+FROM node:22-alpine # layer 1
+
+WORKDIR /angular-app # layer 2
+
+COPY . /angular_app # layer 3
+
+RUN npm install -g @angular/cli # layer 4
+
+RUN npm install # layer 5
+
+EXPOSE 4200
+
+CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200"]
+```
+
+The image above has 5 layers and docker will cache all of them, so every single time you build the image again docker just uses the cached layer. The story is different each time a change in any of them occurs. If this happens docker will rebuild the changed layer and <b>ALL</b> layer below it. So the order of commands in a dockerfile is important, as you should place rarely changed layers at the the top of the file and ever changing ones in at bottom whenever possible. The example above is bad example because during development the source code changes constantly, so `layer 3` needs to be rebuilt every time along with layers 4 and 5 (which is expensive to build).
+
+The next dockerfile breaks layer caching much later:
+
+```dockerfile file
+# Good layer caching example
+
+FROM node:22-alpine # layer 1
+
+WORKDIR /angular-app # layer 2
+
+RUN npm install -g @angular/cli # later 3
+
+COPY .package.json .package-lock.json /angular-app # layer 4
+
+RUN npm install # layer 5
+
+COPY . /angular_app # layer 6
+
+EXPOSE 4200
+
+CMD ["ng", "serve", "--host", "0.0.0.0", "--port", "4200"]
+```
+
+Because dependencies don't change as often, it's much more efficient to put them at the top of the file. In the example above only layer `layer 6` changes, compared to three layers in the previous example. 
 
 Once all layers are provided and the container runs, a single filesystem is created with all layers combined into a single mounted unit. Docker provides commands for accessing this filesystem, where you can run standard linux commands if you built an image with a linux distro, for example.  
 
