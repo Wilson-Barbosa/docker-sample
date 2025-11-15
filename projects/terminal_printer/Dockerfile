@@ -1,7 +1,7 @@
 # Using ubuntu image as the base one for this
 FROM ubuntu:latest
 
-# creates a new directory and cd to it 
+# creates a new directory and cd to it
 WORKDIR /my-app
 
 # Copies the bash to the app folder inside the container
