@@ -77,5 +77,10 @@ Once all layers are provided and the container runs, a single filesystem is crea
 
 You can modify the container's data inside a <b>writable layer</b>, which is deleted once the container shuts down. The image itself is static and immutable, which is necessary to share stateless environments to other users.
 
+### Context
+When you build an image from a dockerfile you need to inform the docker daemon where the files for COPY (and other commands as well) are. This is done by passing a path knonwn as <b>context</b>, for example:
 
-
+```bash
+sudo docker build -t sometag -f <path-to-docker-file> <context-path>
+```
+Because the daemon cannot see any files above or outside of the context you should set it as the root of the application or, at least, as down as possible within the file tree. Note any paths specified within a dockerfile must use the context path as the root.
